@@ -12,12 +12,15 @@ pragma ComponentBehavior: Bound
 // way for what was left of its time. So WP5 can map `current` straight to
 // IslandWindow.noticeView, with the banner checked first.
 //
-// current: null or {kind, icon, label, level, durationMs, color?, width?}
-//   kind  "volume" | "brightness" | "silent" | "soundOn" | "generic"
+// current: null or {kind, icon, label, level, durationMs, color?, width?,
+//                   path, copied, failed}
+//   kind  "volume" | "brightness" | "silent" | "soundOn" | "generic" | "screenshot"
 //   icon  asset name without ".svg" (assets/island), "" for the view's own
 //   label text shown (volume/brightness: the percentage)
 //   level 0..1 for volume/brightness, else -1
 //   color optional label colour ("generic"), width optional capsule width
+//   path / copied / failed  a screenshot's outcome (services/Capture.qml;
+//         the views read Capture.last, these are for anything else)
 
 import QtQuick
 import Quickshell
@@ -33,7 +36,9 @@ Singleton {
             "brightness": Motion.volumeNoticeMs,
             "silent": Motion.soundNoticeMs,
             "soundOn": Motion.soundNoticeMs,
-            "generic": Motion.soundNoticeMs
+            "generic": Motion.soundNoticeMs,
+            // notices.rs:290 — the floating thumbnail.
+            "screenshot": 5000
         })
 
     property var current: null
@@ -53,7 +58,10 @@ Singleton {
             level: obj.level ?? -1,
             durationMs: obj.durationMs ?? (root.durations[kind] ?? 2000),
             color: obj.color ?? "",
-            width: obj.width ?? 0
+            width: obj.width ?? 0,
+            path: obj.path ?? "",
+            copied: obj.copied ?? false,
+            failed: obj.failed ?? false
         };
         if (root.bannerShowing) {
             // A newer one takes the waiting one's place (notices.rs:122-126).

@@ -25,11 +25,18 @@ Singleton {
     readonly property color keyLine: Qt.rgba(1, 1, 1, 0x24 / 255)
     // theme.rs:1730 shadow, dark appearance ("#00000080").
     readonly property color shadow: Qt.rgba(0, 0, 0, 0x80 / 255)
-    // The shadow's shape is not a constant in the Rust (the liquid shader
-    // draws it); a soft drop chosen to read like it.
-    readonly property real shadowBlur: 0.6          // MultiEffect 0..1
-    readonly property real shadowBlurMax: 24
-    readonly property real shadowOffsetY: 4
+    // island/mod.rs:10011-10018 rim_top: the key line's colour along the
+    // top (the Island branch, outside Control Centre: the key line itself).
+    readonly property color rimTop: keyLine
+    // The shadow's shape (a contact drop and a wider one 8 px lower) is the
+    // liquid shader's (shaders/island-goo.frag, from the Rust's
+    // assets/src/effect/island-goo.frag paint_main), not tokens here.
+
+    // ------------------------------------------------------------- the goo
+    // island/mod.rs:9877-9881 reach(): the smooth-minimum radius joining a
+    // bubble to the capsule, rest + travel * travelling (logical px).
+    readonly property real gooRestReach: 2
+    readonly property real gooTravelReach: 20
 
     // island/mod.rs:10637 (test): the shell's accent, deep -> light.
     readonly property color accentDeep: "#4a5fd7"

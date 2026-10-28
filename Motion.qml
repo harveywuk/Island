@@ -67,6 +67,15 @@ Singleton {
     readonly property real marqueeSpeed: 24
     readonly property real marqueeReturnFactor: 2
 
+    // ------------------------------------------------------- authentication
+    // island-motion/src/lib.rs:72-80 shake_offset / SHAKE_SECONDS: macOS's
+    // wrong-password shake, 12 sin(8πt) e^(-6t) px for half a second.
+    readonly property real shakeSeconds: 0.5
+    readonly property real shakeAmplitude: 12
+    // shoji-island/src/island/mod.rs:4686-4700: the check shows this long
+    // before the prompt closes.
+    readonly property int authSuccessHoldMs: 700
+
     // ------------------------------------------------------------- helpers
     // island/mod.rs:412-415.
     function smoothstep(edge0: real, edge1: real, x: real): real {

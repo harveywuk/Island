@@ -15,6 +15,8 @@ import qs
 //   bubbles  : array of up to 2 Components; [0] goes right, [1] left
 //              (island/activity.rs:114-115 fills right before left)
 //   expanded : readonly bool
+//   modal, keyboardWanted : bool (the polkit prompt: no hover / tap on the
+//              capsule; exclusive keyboard, handed to the view's focusInput())
 //   open(), close(), toggle(), holdOpen(ms)
 // It shows noticeView if set, else expandedView when expanded, else
 // compactView; the idle views stand in for a null slot. The capsule springs
@@ -38,6 +40,12 @@ PanelWindow {
 
     // Open when the pointer rests on it (noctalia's; island/mod.rs:1020-1023).
     property bool openOnHover: true
+    // A modal view owns the Island (the polkit prompt): the capsule's own
+    // tap / press-and-hold / hover do nothing, so only the view acts.
+    property bool modal: false
+    // The Island wants the keyboard (the polkit prompt). Exclusive while
+    // true, else none: the Island never takes keys otherwise.
+    property bool keyboardWanted: false
 
     readonly property bool expanded: root._expanded
     readonly property bool hovered: hover.hovered
@@ -84,14 +92,13 @@ PanelWindow {
     // ------------------------------------------------------- the layer shell
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "shoji-island"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: root.keyboardWanted ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     anchors.top: true
     // island/mod.rs:187-195 reserved_top(): TOP_MARGIN + IDLE.1 + 12.
     exclusiveZone: Theme.exclusiveZone
     implicitWidth: Theme.envelopeWidth
     implicitHeight: Theme.envelopeHeight
     color: "transparent"
-    focusable: false
 
     // Input only where the Island is; the rest of the envelope lets the
     // pointer through to what is under it.
@@ -107,7 +114,7 @@ PanelWindow {
     Timer {
         id: openTimer
         interval: Motion.hoverOpenMs
-        onTriggered: if (root.openOnHover && hover.hovered) root.open()
+        onTriggered: if (root.openOnHover && !root.modal && hover.hovered) root.open()
     }
     Timer {
         id: closeTimer
@@ -210,6 +217,17 @@ PanelWindow {
         root._ready = true;
     }
 
+    // A view that takes keys (AuthExpanded's focusInput()) gets them once
+    // the window wants the keyboard, its view is shown and the compositor
+    // has given the surface focus (Window.active, below).
+    onKeyboardWantedChanged: root._focusContent()
+    onActiveItemChanged: root._focusContent()
+    function _focusContent(): void {
+        const item = root.activeItem;
+        if (root.keyboardWanted && item && typeof item.focusInput === "function")
+            item.focusInput();
+    }
+
     // One content layer: laid out at its view's own size (centred along the
     // top of the capsule) so content stays put while the shape springs
     // round it, as iOS's (island/mod.rs:9593-9600).
@@ -279,6 +297,18 @@ PanelWindow {
     }
 
     // ------------------------------------------------------------- drawing
+    // The black surface, key line and shadow of the capsule and bubbles as
+    // one liquid shape (docs/SHADERS.md). Under everything; no input.
+    Liquid {
+        x: 0
+        y: 0
+        width: root.width
+        height: root.height
+        capsuleItem: capsule
+        leftBubbleItem: leftBubble
+        rightBubbleItem: rightBubble
+    }
+
     Capsule {
         id: capsule
         x: Math.round((root.width - width) / 2)
@@ -286,6 +316,10 @@ PanelWindow {
         width: Math.max(0, widthSpring.value)
         height: Math.max(0, heightSpring.value)
         radius: Math.max(0, radiusSpring.value)
+
+        // VERIFY: the attached Window reports the layer surface's keyboard
+        // focus (QQuickWindow::isActive) once the compositor grants it.
+        Window.onActiveChanged: if (Window.active) root._focusContent()
 
         ContentSlot {
             id: slotA
@@ -307,11 +341,11 @@ PanelWindow {
             onHoveredChanged: {
                 if (hover.hovered) {
                     closeTimer.stop();
-                    if (root.openOnHover && !root._expanded)
+                    if (root.openOnHover && !root.modal && !root._expanded)
                         openTimer.restart();
                 } else {
                     openTimer.stop();
-                    if (root._expanded && !holdTimer.running)
+                    if (root._expanded && !root.modal && !holdTimer.running)
                         closeTimer.restart();
                 }
             }
@@ -322,12 +356,14 @@ PanelWindow {
             // island/mod.rs:1072 HOLD_MS: touch and hold opens it; a long
             // press does not also tap.
             longPressThreshold: Motion.holdMs / 1000
+            enabled: !root.modal
             onPressedChanged: if (tap.pressed) openTimer.stop()
             onTapped: root.toggle()
             onLongPressed: root.open()
         }
         TapHandler {
             acceptedButtons: Qt.RightButton | Qt.MiddleButton
+            enabled: !root.modal
             // VERIFY: tapped(eventPoint, button) carries the button (Qt 6.2+).
             onTapped: (eventPoint, button) => root.secondaryClicked(button)
         }

@@ -35,8 +35,8 @@ Modules: root dir is `qs` (`import qs` gives Theme, Motion), subdirs are
 `qs.services`, `qs.components`, `qs.views`, `qs.views.notices`. Every QML file uses
 `pragma ComponentBehavior: Bound`.
 
-No custom shaders in this pass (no `qsb` to compile them): goo neck, Liquid Glass and
-artwork flow are later. Bubbles are plain circles 8 px from the capsule.
+Shaders: the goo (capsule + bubbles as one liquid) landed later, see
+docs/SHADERS.md. Liquid Glass and the artwork flow are not ported.
 
 ## Shared contract (everyone codes to this)
 
@@ -101,5 +101,24 @@ Constants and Rust references: see `Theme.qml` / `Motion.qml` comments.
   in services that use siblings; handover guarded until the window is
   complete; hover no longer opens the Island under a banner; local constants
   that equal Theme / Motion tokens now use them.
+- Goo / polkit / screenshots (docs/PLAN-GOO-POLKIT-CAPTURE.md, WP-A–D):
+  done. WP-A `components/Liquid.qml` + `shaders/island-goo.frag(.qsb)`
+  (docs/SHADERS.md); Capsule / Bubble no longer draw fill, key line or
+  shadow. WP-B `services/Auth.qml` + `views/AuthExpanded.qml`
+  (docs/POLKIT.md). WP-C `services/Capture.qml` + `scripts/capture.sh` +
+  `views/notices/Screenshot{Notice,Expanded}.qml` (docs/SCREENSHOTS.md).
+  WP-D integration: Liquid is IslandWindow's first drawing child;
+  IslandWindow gained `modal` (no capsule hover / tap) and `keyboardWanted`
+  (`WlrLayershell.keyboardFocus` Exclusive, else None; the shown view's
+  `focusInput()` is called when it is wanted, shown, or the window becomes
+  active). shell.qml's noticeView: `Auth.active` → AuthExpanded >
+  banner > `Capture.open` → ScreenshotExpanded > `Notices.current`
+  (kind "screenshot" → ScreenshotNotice); the Island closes when the prompt
+  ends; `Capture.flash` draws a 280 ms white flash on a click-through
+  overlay surface (namespace `shoji-island-flash`). Notices takes
+  "screenshot" (5000 ms) and passes path / copied / failed through. Auth and
+  Capture are touched at startup. Not done: closing the held-open
+  screenshot on a click outside the Island (a layer surface with an input
+  mask does not see it; it closes 8 s after the pointer leaves).
 - Not run on a real session yet: every `// VERIFY:` is open. qmllint
   (Qt 6.4, no Quickshell types) reports no syntax errors.

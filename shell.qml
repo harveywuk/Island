@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import qs
 import qs.components
 import qs.services
@@ -58,13 +59,24 @@ ShellRoot {
     readonly property Component volumeNotice: Component { VolumeNotice {} }
     readonly property Component soundNotice: Component { SoundNotice {} }
     readonly property Component compactNotice: Component { CompactNotice {} }
+    readonly property Component screenshotNotice: Component { ScreenshotNotice {} }
+    readonly property Component screenshotExpanded: Component { ScreenshotExpanded {} }
+    // The polkit prompt (docs/POLKIT.md).
+    readonly property Component authExpanded: Component { AuthExpanded {} }
 
     // ------------------------------------------------------- state -> slots
-    // An app's banner outranks every notice (notices.rs:300-303); Notices
-    // already holds its own back while one shows.
+    // The polkit prompt outranks everything (mod.rs:4522-4748: it owns the
+    // Island until it closes). Then an app's banner outranks every notice
+    // (notices.rs:300-303); Notices already holds its own back while one
+    // shows. A held-open screenshot outlives its 5 s notice, so it comes
+    // before Notices.current (docs/SCREENSHOTS.md).
     readonly property Component noticeView: {
+        if (Auth.active)
+            return shell.authExpanded;
         if (Notifs.current !== null)
             return Notifs.open ? shell.bannerExpanded : shell.banner;
+        if (Capture.open)
+            return shell.screenshotExpanded;
         const notice = Notices.current;
         if (!notice)
             return null;
@@ -75,6 +87,8 @@ ShellRoot {
         case "silent":
         case "soundOn":
             return shell.soundNotice;
+        case "screenshot":
+            return shell.screenshotNotice;
         default:
             return shell.compactNotice;
         }
@@ -139,6 +153,68 @@ ShellRoot {
             // Resting on a banner holds it (Notifs.pauseExpiry), it does not
             // open the Island under it.
             openOnHover: shell.noticeView === null
+            // The polkit prompt: the capsule ignores hover-close and taps,
+            // and the Island takes the keyboard (AuthExpanded's focusInput()
+            // is called once focus arrives).
+            modal: Auth.active
+            keyboardWanted: Auth.active
+        }
+    }
+
+    // The prompt gone, the Island goes back to compact (not to whatever
+    // the capsule's tap / hover left it at).
+    Connections {
+        target: Auth
+        function onActiveChanged(): void {
+            if (Auth.active)
+                return;
+            for (const w of islands.instances)
+                w.close();
+        }
+    }
+
+    // A shot was taken: a brief white flash over the Island's screen, as
+    // macOS's (click-through, no exclusive zone; made only while it shows).
+    property real flashOpacity: 0
+    NumberAnimation {
+        id: flashAnim
+        target: shell
+        property: "flashOpacity"
+        from: 0.6
+        to: 0
+        duration: 280
+        easing.type: Easing.OutCubic
+    }
+    Connections {
+        target: Capture
+        function onFlash(): void {
+            flashAnim.restart();
+        }
+    }
+    Variants {
+        model: shell.flashOpacity > 0 ? shell.islandScreens : []
+
+        PanelWindow {
+            required property var modelData
+            screen: modelData
+
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "shoji-island-flash"
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            exclusionMode: ExclusionMode.Ignore
+            anchors.top: true
+            anchors.bottom: true
+            anchors.left: true
+            anchors.right: true
+            color: "transparent"
+            // An empty region: the pointer goes through.
+            mask: Region {}
+
+            Rectangle {
+                anchors.fill: parent
+                color: "white"
+                opacity: shell.flashOpacity
+            }
         }
     }
 
@@ -155,10 +231,11 @@ ShellRoot {
     // Quickshell creates a singleton on first use. Touch every service at
     // startup so the notification server, the PipeWire / brightness watchers
     // (which raise notices nothing else reads them for) and the IPC targets
-    // ("island" in Timers, "brightness" in Brightness) exist from the start.
+    // ("island" in Timers, "brightness" in Brightness, "capture" in Capture)
+    // exist from the start, and the polkit agent (Auth) registers at once.
     Component.onCompleted: {
         const services = [Notifs.queueLength, Notices.current, Audio.ready, Brightness.available,
-            Media.active, Power.active, Timers.running, Activities.main];
+            Media.active, Power.active, Timers.running, Activities.main, Auth.registered, Capture.busy];
         void services;
     }
 

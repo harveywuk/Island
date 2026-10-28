@@ -9,7 +9,9 @@ import qs
 // the capsule's round end and settles BUBBLE_GAP away, centred on the idle
 // capsule's middle, and goes back into it the same way.
 //
-// Plain circles in this pass: no goo neck (that needs a shader).
+// It draws no shape of its own: components/Liquid.qml draws it with the
+// capsule as one liquid (shaders/island-goo.frag), from this item's
+// geometry and `reach`, so a bubble leaving the capsule necks and breaks.
 //
 // Positioned in the window's coordinates: give it the capsule's geometry.
 // Its `component` is a view (contract: targetWidth / targetHeight); a bubble
@@ -72,6 +74,14 @@ Item {
         ? root.capsuleX + Motion.lerp(_end / 2, -Theme.bubbleGap - widthSpring.value / 2, _reach)
         : root.capsuleX + root.capsuleWidth - Motion.lerp(_end / 2, -Theme.bubbleGap - widthSpring.value / 2, _reach)
     readonly property real _middle: root.capsuleY + Motion.lerp(root.capsuleHeight, Theme.idleHeight, root.presence) / 2
+
+    // island/mod.rs:9877-9881 reach(): the liquid's smooth-minimum radius
+    // to this bubble (logical px). Wide while it travels, so the liquid
+    // necks and breaks; tight once it rests (or still lies over the
+    // capsule's end, which would swell), so it sits cleanly apart.
+    readonly property real _travelling: root.presence > 0.02
+        ? (1 - root.presence) * Motion.smoothstep(0, 0.35, root.presence) : 0
+    readonly property real reach: Theme.gooRestReach + Theme.gooTravelReach * root._travelling
 
     // Zero-sized while gone, so the window's input mask leaves it out.
     x: root.shown ? root._centre - root._w / 2 : root.capsuleX
