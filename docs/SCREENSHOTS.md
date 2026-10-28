@@ -17,12 +17,12 @@ through the file manager's `org.freedesktop.FileManager1.ShowItems`), `gio`
 Bind these in `hyprland.conf` (macOS's Super+Shift+3/4, Ctrl to copy):
 
 ```ini
-bind = SUPER SHIFT, 3, exec, qs ipc -p ~/path/to/quickshell/island call capture screen
-bind = SUPER SHIFT, 4, exec, qs ipc -p ~/path/to/quickshell/island call capture portion
-bind = SUPER SHIFT, 5, exec, qs ipc -p ~/path/to/quickshell/island call capture window
-bind = SUPER CTRL SHIFT, 3, exec, qs ipc -p ~/path/to/quickshell/island call capture screenCopy
-bind = SUPER CTRL SHIFT, 4, exec, qs ipc -p ~/path/to/quickshell/island call capture portionCopy
-bind = SUPER CTRL SHIFT, 5, exec, qs ipc -p ~/path/to/quickshell/island call capture windowCopy
+bind = SUPER SHIFT, 3, exec, qs ipc -c island call capture screen
+bind = SUPER SHIFT, 4, exec, qs ipc -c island call capture portion
+bind = SUPER SHIFT, 5, exec, qs ipc -c island call capture window
+bind = SUPER CTRL SHIFT, 3, exec, qs ipc -c island call capture screenCopy
+bind = SUPER CTRL SHIFT, 4, exec, qs ipc -c island call capture portionCopy
+bind = SUPER CTRL SHIFT, 5, exec, qs ipc -c island call capture windowCopy
 ```
 
 IPC target `capture`:

@@ -15,11 +15,11 @@ pragma ComponentBehavior: Bound
 // selection shows nothing (mod.rs:6856).
 //
 // IPC (target "capture"):
-//   qs ipc -p quickshell/island call capture screen | window | portion
-//   qs ipc -p quickshell/island call capture screenCopy | windowCopy | portionCopy
-//   qs ipc -p quickshell/island call capture timer 5        (the screen, after 5 s)
-//   qs ipc -p quickshell/island call capture take portion false 3
-//   qs ipc -p quickshell/island call capture openLast | showLast | copyLast | trashLast
+//   qs ipc -c island call capture screen | window | portion
+//   qs ipc -c island call capture screenCopy | windowCopy | portionCopy
+//   qs ipc -c island call capture timer 5        (the screen, after 5 s)
+//   qs ipc -c island call capture take portion false 3
+//   qs ipc -c island call capture openLast | showLast | copyLast | trashLast
 
 import QtQuick
 import Quickshell

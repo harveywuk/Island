@@ -7,7 +7,7 @@ pragma ComponentBehavior: Bound
 //   write `brightnessctl -q -c backlight set N%` (never below 1 %)
 // Polled, since sysfs backlight files do not notify reliably. A change after
 // the first reading shows a "brightness" notice (1500 ms, as the volume's).
-// IPC: `qs ipc -p quickshell/island call brightness up|down|set <percent>|get`.
+// IPC: `qs ipc -c island call brightness up|down|set <percent>|get`.
 
 import QtQuick
 import Quickshell

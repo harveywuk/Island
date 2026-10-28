@@ -11,7 +11,7 @@ import qs.views
 import qs.views.notices
 import qs.views.bubbles
 
-// The Island, as its own Quickshell config: `qs -p quickshell/island`.
+// The Island, as its own Quickshell config: `qs -c island` (cloned to ~/.config/quickshell/island).
 // One Island on the primary screen (the first Quickshell lists, or the one
 // named by $SHOJI_ISLAND_SCREEN, e.g. "DP-1").
 ShellRoot {
@@ -239,7 +239,7 @@ ShellRoot {
         void services;
     }
 
-    // `qs ipc -p quickshell/island call islandWindow toggle` (see README).
+    // `qs ipc -c island call islandWindow toggle` (see README).
     IpcHandler {
         target: "islandWindow"
 

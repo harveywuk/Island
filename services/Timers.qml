@@ -8,8 +8,8 @@ pragma ComponentBehavior: Bound
 // clears.
 //
 // IPC (target "island"):
-//   qs ipc -p quickshell/island call island timer 300
-//   qs ipc -p quickshell/island call island cancelTimer
+//   qs ipc -c island call island timer 300
+//   qs ipc -c island call island cancelTimer
 
 import QtQuick
 import Quickshell

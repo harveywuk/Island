@@ -19,7 +19,7 @@ keeps its geometry and adds `reach`; neither draws fill, key line or shadow.
 ### Rebuilding the `.qsb`
 
 Quickshell loads the precompiled `shaders/island-goo.frag.qsb`, which is
-checked in. After editing `island-goo.frag`, run from `quickshell/island/`:
+checked in. After editing `island-goo.frag`, run from the repository root:
 
 ```sh
 /usr/lib/qt6/bin/qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 \

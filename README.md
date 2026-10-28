@@ -1,21 +1,21 @@
 # shoji-island for Quickshell
 
-The Dynamic Island from shoji-island (`crates/shoji-island/src/island/`,
-`crates/island-motion`) as a standalone [Quickshell](https://quickshell.org)
+The Dynamic Island from [shoji-island](https://github.com/harveywuk/shoji-island)
+(`crates/shoji-island/src/island/`, `crates/island-motion`), ported to a standalone [Quickshell](https://quickshell.org)
 config (QML, Qt 6). It runs on its own, next to whatever bar or shell you
 already use.
 
 ## Run
 
 ```sh
-qs -p quickshell/island            # from the repository root
-# or install it as a named config:
-ln -s "$PWD/quickshell/island" ~/.config/quickshell/island
+git clone https://github.com/harveywuk/island ~/.config/quickshell/island
 qs -c island
+# or run it from anywhere:
+qs -p /path/to/island
 ```
 
 The Island goes on the first screen Quickshell lists. To pick another, name
-it: `SHOJI_ISLAND_SCREEN=DP-1 qs -p quickshell/island`.
+it: `SHOJI_ISLAND_SCREEN=DP-1 qs -c island`.
 
 Needs **Quickshell 0.3.0 or later** (`Quickshell.Services.Polkit`, built
 with polkit support; 0.2 is enough without `services/Auth.qml`, see
@@ -53,20 +53,20 @@ centre, turn that off or it will sit under the Island.
 ### IPC
 
 ```sh
-qs ipc -p quickshell/island call islandWindow toggle
-qs ipc -p quickshell/island call islandWindow open
-qs ipc -p quickshell/island call islandWindow close
-qs ipc -p quickshell/island call islandWindow holdOpen 4000
-qs ipc -p quickshell/island show          # every target and function
+qs ipc -c island call islandWindow toggle
+qs ipc -c island call islandWindow open
+qs ipc -c island call islandWindow close
+qs ipc -c island call islandWindow holdOpen 4000
+qs ipc -c island show          # every target and function
 ```
 
 The services add their own targets:
 
 ```sh
-qs ipc -p quickshell/island call island timer 300      # a 5-minute timer
-qs ipc -p quickshell/island call island cancelTimer
-qs ipc -p quickshell/island call brightness up         # or down, set <percent>, get
-qs ipc -p quickshell/island call capture portion       # screenshots, see below
+qs ipc -c island call island timer 300      # a 5-minute timer
+qs ipc -c island call island cancelTimer
+qs ipc -c island call brightness up         # or down, set <percent>, get
+qs ipc -c island call capture portion       # screenshots, see below
 ```
 
 (Bind your brightness keys to `brightness up` / `down` to get the notice at
@@ -79,16 +79,16 @@ thumbnail; press and hold it for Copy / Open / Show in Folder / Delete.
 Bind the keys in `hyprland.conf` (use your own path to this folder):
 
 ```ini
-bind = , Print, exec, qs ipc -p ~/path/to/quickshell/island call capture portion
-bind = SHIFT, Print, exec, qs ipc -p ~/path/to/quickshell/island call capture screen
-bind = CTRL, Print, exec, qs ipc -p ~/path/to/quickshell/island call capture portionCopy
+bind = , Print, exec, qs ipc -c island call capture portion
+bind = SHIFT, Print, exec, qs ipc -c island call capture screen
+bind = CTRL, Print, exec, qs ipc -c island call capture portionCopy
 # macOS's: Super+Shift+3 screen, 4 portion, 5 window; add Ctrl to copy
-bind = SUPER SHIFT, 3, exec, qs ipc -p ~/path/to/quickshell/island call capture screen
-bind = SUPER SHIFT, 4, exec, qs ipc -p ~/path/to/quickshell/island call capture portion
-bind = SUPER SHIFT, 5, exec, qs ipc -p ~/path/to/quickshell/island call capture window
-bind = SUPER CTRL SHIFT, 3, exec, qs ipc -p ~/path/to/quickshell/island call capture screenCopy
-bind = SUPER CTRL SHIFT, 4, exec, qs ipc -p ~/path/to/quickshell/island call capture portionCopy
-bind = SUPER CTRL SHIFT, 5, exec, qs ipc -p ~/path/to/quickshell/island call capture windowCopy
+bind = SUPER SHIFT, 3, exec, qs ipc -c island call capture screen
+bind = SUPER SHIFT, 4, exec, qs ipc -c island call capture portion
+bind = SUPER SHIFT, 5, exec, qs ipc -c island call capture window
+bind = SUPER CTRL SHIFT, 3, exec, qs ipc -c island call capture screenCopy
+bind = SUPER CTRL SHIFT, 4, exec, qs ipc -c island call capture portionCopy
+bind = SUPER CTRL SHIFT, 5, exec, qs ipc -c island call capture windowCopy
 ```
 
 (With `qs -c island`, write `qs ipc -c island call …`.) Saved to
